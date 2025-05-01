@@ -8,8 +8,10 @@ import { toast } from "react-toastify";
 
 export const action = async ({ request }) => {
   const formData = await request.formData();
+
   try {
     await customFetch.post("/upload", formData);
+
     toast.success("Upload Successful");
   } catch (error) {
     toast.error(response?.error?.data?.message);
@@ -54,21 +56,23 @@ const Collection = () => {
                 name="name"
               />
             </div>
-            <div className="flex items-center bg-indigo-500 justify-center w-fit  p-1 rounded-md hover:bg-indigo-700 duration-300">
-              <span className="text-3xl text-slate-100">
-                <ImFolderUpload />
-              </span>
-              <label className=" text-slate-100  " htmlFor="avatar">
-                Choose a photo
+            <div className="relative w-fit">
+              <label
+                htmlFor="avatar"
+                className="flex items-center gap-2 cursor-pointer bg-indigo-500 hover:bg-indigo-600 text-white py-2 px-4 rounded-md shadow-md transition duration-300"
+              >
+                <ImFolderUpload className="text-xl" />
+                <span>Choose a photo</span>
               </label>
               <input
                 type="file"
-                className="hidden"
                 id="avatar"
                 name="image"
                 accept="image/*"
+                className="hidden"
               />
             </div>
+
             <button
               type="submit"
               disabled={isSubmitting}
