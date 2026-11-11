@@ -1,3 +1,62 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    @apply bg-wall font-sans text-ink;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-cyan;
+    outline-style: solid;
+  }
+  ::selection {
+    @apply bg-cyan-soft;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60;
+  }
+  .btn-primary {
+    @apply btn bg-cyan text-mount hover:bg-cyan-deep;
+  }
+  .btn-quiet {
+    @apply btn text-ink hover:bg-ink/5;
+  }
+  .input {
+    @apply w-full rounded-md border border-line bg-mount px-3 py-2.5 text-[15px] text-ink placeholder:text-graphite/70 transition-colors hover:border-graphite/50 focus:border-cyan focus:outline-none focus:ring-2 focus:ring-cyan/25;
+  }
+}
+
+/* Route-change progress bar */
+@keyframes progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(0.9); }
+}
+.progress-bar {
+  transform-origin: left;
+  animation: progress 2.5s cubic-bezier(.1,.7,.3,1) forwards;
+}
+
+/* Toasts, matched to the palette */
+:root {
+  --toastify-font-family: Figtree, system-ui, sans-serif;
+  --toastify-color-light: #FBFBF8;
+  --toastify-text-color-light: #1C2220;
+  --toastify-color-success: #23408E;
+  --toastify-color-info: #23408E;
+  --toastify-color-error: #A8261D;
+  --toastify-color-progress-light: #23408E;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

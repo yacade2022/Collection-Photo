@@ -7,13 +7,15 @@ export const authenticationUser = (req, res, next) => {
     throw new UnauthenticatedError("authentication invalid");
   }
 
-  const verificationToken = jwt.verify(token, process.env.JWT_SECRET);
-
+  // Verify inside the try so an expired or tampered token returns 401
+  // (and the client redirects to login) instead of a 500.
+  let payload;
   try {
-    const { userId, name } = verificationToken;
-    req.user = { userId, name };
-    next();
+    payload = jwt.verify(token, process.env.JWT_SECRET);
   } catch (error) {
     throw new UnauthenticatedError("authentication invalid");
   }
+  const { userId, name } = payload;
+  req.user = { userId, name };
+  next();
 };

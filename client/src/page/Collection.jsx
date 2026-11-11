@@ -1,115 +1,103 @@
-import React from "react";
-import LogUser from "./LogUser";
-import { Form } from "react-router-dom";
-import { ImFolderUpload } from "react-icons/im";
-import customFetch from "../utils/customFetch";
-import { useLoaderData, useNavigation } from "react-router-dom";
+import { useCallback, useRef, useState } from "react";
+import { redirect, useLoaderData } from "react-router-dom";
 import { toast } from "react-toastify";
+import customFetch from "../utils/customFetch";
+import errorMessage from "../utils/errorMessage";
+import LogUser from "./LogUser";
+import UploadPanel from "../components/UploadPanel";
+import PhotoCard from "../components/PhotoCard";
+import Lightbox from "../components/Lightbox";
 
 export const action = async ({ request }) => {
   const formData = await request.formData();
 
   try {
     await customFetch.post("/upload", formData);
-
-    toast.success("Upload Successful");
+    toast.success("Photo uploaded");
+    return { ok: true };
   } catch (error) {
-    toast.error(response?.error?.data?.message);
+    toast.error(errorMessage(error, "Upload failed. Check your connection and try again."));
+    return { ok: false };
   }
-  return null;
 };
 
 export const loader = async () => {
   try {
     const { data } = await customFetch.get("/getImages");
-    return { data };
+    return data;
   } catch (error) {
-    return error;
+    if (error?.response?.status === 401) return redirect("/login");
+    throw error;
   }
 };
 
 const Collection = () => {
-  const navigation = useNavigation();
-  const isSubmitting = navigation.state === "submitting";
-  const { data } = useLoaderData();
-  const { collection } = data;
-  const { userName } = data;
+  const { collection = [], userName } = useLoaderData();
+  const fileInputRef = useRef(null);
+  const [openIndex, setOpenIndex] = useState(null);
+
+  // Newest first.
+  const photos = [...collection].reverse();
+  const count = photos.length;
+
+  const navigate = useCallback(
+    (step) => setOpenIndex((i) => (i === null ? i : (i + step + count) % count)),
+    [count]
+  );
 
   return (
     <>
-      <LogUser userName={userName} />
-      <div className="container mx-auto  ">
-        <div>
-          <Form
-            method="post"
-            encType="multipart/form-data"
-            className="max-sm:w-2/3 w-1/2 mx-auto mt-12 p-4 rounded-md   shadow-lg shadow-blue-500/50  "
-          >
-            <h3 className=" capitalize  text-indigo-500 font-semibold text-xl mb-4">
-              file upload
-            </h3>
-            <div className="mb-4 w-fit">
-              <label className="text-indigo-500 capitalize pr-1 ">name</label>
-              <input
-                type="text"
-                className=" max-sm:w-full bg-slate-200 p-1 rounded-md outline-none"
-                name="name"
-              />
-            </div>
-            <div className="relative w-fit">
-              <label
-                htmlFor="avatar"
-                className="flex items-center gap-2 cursor-pointer bg-indigo-500 hover:bg-indigo-600 text-white py-2 px-4 rounded-md shadow-md transition duration-300"
-              >
-                <ImFolderUpload className="text-xl" />
-                <span>Choose a photo</span>
-              </label>
-              <input
-                type="file"
-                id="avatar"
-                name="image"
-                accept="image/*"
-                className="hidden"
-              />
-            </div>
+      <header className="sticky top-0 z-20 border-b border-line/70 bg-wall/85 backdrop-blur">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-8">
+          <span className="font-display text-lg font-semibold text-cyan">Collection</span>
+          <LogUser userName={userName} />
+        </div>
+      </header>
 
+      <main className="mx-auto max-w-7xl px-4 pb-24 sm:px-8">
+        <section className="grid gap-8 py-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,40rem)] lg:items-end lg:py-14">
+          <div>
+            <h1 className="font-display text-5xl font-extrabold tracking-tight sm:text-6xl">
+              {userName ? `${userName}'s wall` : "Your wall"}
+            </h1>
+            <p className="mt-3 text-graphite">
+              {count === 0
+                ? "Nothing here yet."
+                : `${count} ${count === 1 ? "photo" : "photos"}, newest first.`}
+            </p>
+          </div>
+          <UploadPanel ref={fileInputRef} />
+        </section>
+
+        {count === 0 ? (
+          <div className="grid place-items-center rounded-xl border-2 border-dashed border-line px-6 py-20 text-center">
+            <h2 className="font-display text-2xl font-semibold">Your wall is empty</h2>
+            <p className="mt-2 max-w-sm text-graphite">
+              Upload a photo and it will be hung here. Click any photo later to see it full size.
+            </p>
             <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-24 text-slate-100 bg-indigo-500 mt-1 p-1 rounded-md hover:bg-indigo-700 hover:scale-95 duration-300"
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="btn-primary mt-6"
             >
-              {isSubmitting ? "uploading..." : "upload"}
+              Choose a photo
             </button>
-          </Form>
-        </div>
-      </div>
-      <div>
-        <div className=" py-12 px-16 grid md:grid-cols-3  lg:grid-cols-4 gap-10 ">
-          {collection.map((element) => {
-            const { _id: id, image, name } = element;
-            return (
-              <div key={id}>
-                <img
-                  src={image}
-                  alt="image"
-                  className=" w-full h-48 rounded-md max-w-full max-h-full "
-                />
-                <div className="flex justify-between items-center mt-1">
-                  <p className=" text-indigo-500 font-medium">{name}</p>
-                  <Form method="post" action={`/delete/${id}`}>
-                    <button
-                      type="submit"
-                      className=" bg-indigo-500  px-1 rounded-md text-slate-50 hover:bg-indigo-700 duration-300"
-                    >
-                      delete
-                    </button>
-                  </Form>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+          </div>
+        ) : (
+          <div className="columns-1 gap-6 sm:columns-2 lg:columns-3 xl:columns-4">
+            {photos.map((photo, i) => (
+              <PhotoCard key={photo._id} photo={photo} onOpen={() => setOpenIndex(i)} />
+            ))}
+          </div>
+        )}
+      </main>
+
+      <Lightbox
+        photos={photos}
+        index={openIndex !== null && openIndex < count ? openIndex : null}
+        onClose={() => setOpenIndex(null)}
+        onNavigate={navigate}
+      />
     </>
   );
 };

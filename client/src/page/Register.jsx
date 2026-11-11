@@ -1,89 +1,58 @@
-import React from "react";
-import { AiOutlineMail, AiFillLock, AiOutlineUser } from "react-icons/ai";
 import { Form, redirect, useNavigation, Link } from "react-router-dom";
-
-import customFetch from "../utils/customFetch";
 import { toast } from "react-toastify";
+import customFetch from "../utils/customFetch";
+import errorMessage from "../utils/errorMessage";
+import AuthShell from "../components/AuthShell";
+import Field from "../components/Field";
 
 export const action = async ({ request }) => {
-  const formData = await request.formData();
-  const data = Object.fromEntries(formData);
+  const data = Object.fromEntries(await request.formData());
 
   try {
     await customFetch.post("/auth/register", data);
-    toast.success("Registration Successful");
+    toast.success("Account created. Log in to start your collection.");
     return redirect("/login");
   } catch (error) {
-    toast.error(error?.response?.data);
-    return error;
+    toast.error(errorMessage(error, "Couldn't create your account. Try again."));
+    return null;
   }
 };
 
 const Register = () => {
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
+
   return (
-    <div className="container mx-auto  w-full h-screen py-24  ">
-      <div className=" mx-auto  max-sm:w-2/3 md:w-2/4 lg:w-1/3 xl:w-1/4 p-6   border-solid border-2 border-violet-500 rounded-lg  ">
-        <h2 className="text-center capitalize  text-indigo-500 font-semibold text-xl mb-4">
-          Register
-        </h2>
-        <Form method="post">
-          <div className=" my-2 ">
-            <span className="bg-slate-200">
-              <AiOutlineUser />
-            </span>
-
-            <input
-              type="name"
-              placeholder="name"
-              name="name"
-              className=" max-sm:w-full w-full bg-slate-200  p-1 rounded-md outline-none "
-            />
-          </div>
-          <div className=" my-2 ">
-            <span>
-              <AiOutlineMail />
-            </span>
-
-            <input
-              type="email"
-              placeholder="email"
-              name="email"
-              className=" max-sm:w-full w-full bg-slate-200  p-1 rounded-md outline-none "
-            />
-          </div>
-          <div className=" my-2 ">
-            <span>
-              <AiFillLock />
-            </span>
-
-            <input
-              type="password"
-              placeholder="password"
-              name="password"
-              className=" max-sm:w-full w-full  bg-slate-200 p-1 rounded-md outline-none"
-            />
-          </div>
-          <button
-            disabled={isSubmitting}
-            className="w-full mt-3 bg-indigo-500 p-1 rounded-md text-slate-50 hover:bg-indigo-700 duration-300 "
-          >
-            {isSubmitting ? "Submitting..." : "Submit"}
-          </button>
-        </Form>
-
-        <div className="mt-4">
-          <p className="inline-block mb-2 ">Already member?</p>
-          <Link
-            to="login"
-            className=" ml-1 bg-indigo-500 p-1 rounded-md text-slate-50 hover:bg-indigo-700 duration-300"
-          >
-            Login
+    <AuthShell
+      title="Create an account"
+      intro="Start a private collection of your photos."
+      footer={
+        <>
+          Already have an account?{" "}
+          <Link to="/login" className="font-semibold text-cyan underline-offset-4 hover:underline">
+            Log in
           </Link>
-        </div>
-      </div>
-    </div>
+        </>
+      }
+    >
+      <Form method="post" className="space-y-5">
+        <Field label="Name" name="name" autoComplete="name" required autoFocus />
+        <Field label="Email" name="email" type="email" autoComplete="email" required />
+        <Field
+          label="Password"
+          name="password"
+          type="password"
+          autoComplete="new-password"
+          minLength={6}
+          maxLength={12}
+          hint="6 to 12 characters."
+          required
+        />
+        <button type="submit" disabled={isSubmitting} className="btn-primary w-full">
+          {isSubmitting ? "Creating account…" : "Create account"}
+        </button>
+      </Form>
+    </AuthShell>
   );
 };
 
