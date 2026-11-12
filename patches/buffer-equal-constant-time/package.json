@@ -1,0 +1,7 @@
+{
+  "name": "buffer-equal-constant-time",
+  "version": "1.0.1-patched",
+  "description": "Drop-in replacement for buffer-equal-constant-time@1.0.1 that works on Node 25+ (no buffer.SlowBuffer). Pulled in via jsonwebtoken > jws > jwa.",
+  "main": "index.js",
+  "license": "BSD-3-Clause"
+}
